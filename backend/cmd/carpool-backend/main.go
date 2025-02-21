@@ -38,12 +38,19 @@ func main() {
 	http.HandleFunc("/profile", middleware.JWTMiddleware(userHandler.UpdateProfileHandler, []byte(cfg.JWTSecret)))
 
 	// Routes for Ride domain.
+	// POST endpoint for creating rides.
 	http.HandleFunc("/rides", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			// POST requires JWT authentication.
 			middleware.JWTMiddleware(rideHandler.PostRideHandler, []byte(cfg.JWTSecret))(w, r)
-		} else if r.Method == http.MethodGet {
-			// GET is public.
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	// GET endpoint for geospatial ride search.
+	http.HandleFunc("/rides/search", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			// GET is public for search.
 			rideHandler.SearchRidesHandler(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

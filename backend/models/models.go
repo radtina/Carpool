@@ -15,17 +15,21 @@ type User struct {
 }
 
 type Ride struct {
-	RideID          int       `json:"ride_id,omitempty"`
-	UserID          int       `json:"user_id"`
-	FromLocation    string    `json:"from_location"`
-	ToLocation      string    `json:"to_location"`
-	Price           float64   `json:"price"`
-	RideTime        time.Time `json:"ride_time"`
-	AvailableSeats  int       `json:"available_seats,omitempty"`
-	CarType         string    `json:"car_type,omitempty"`
-	RideStatus      string    `json:"ride_status,omitempty"`
-	AdditionalNotes string    `json:"additional_notes,omitempty"`
-	CreatedAt       time.Time `json:"created_at,omitempty"`
+    RideID              int       `json:"ride_id,omitempty"`
+    UserID              int       `json:"user_id"`
+    FromLocation        string    `json:"from_location"`
+    ToLocation          string    `json:"to_location"`
+    Price               float64   `json:"price"`
+    RideTime            time.Time `json:"ride_time"`
+    AvailableSeats      int       `json:"available_seats,omitempty"`
+    CarType             string    `json:"car_type,omitempty"`
+    RideStatus          string    `json:"ride_status,omitempty"`
+    AdditionalNotes     string    `json:"additional_notes,omitempty"`
+    CreatedAt           time.Time `json:"created_at,omitempty"`
+    
+    // New fields for geospatial search results.
+    OriginDistance      float64   `json:"origin_distance,omitempty"`
+    DestinationDistance float64   `json:"destination_distance,omitempty"`
 }
 
 type Claims struct {
