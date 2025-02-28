@@ -24,28 +24,37 @@ func (repo *Repository) GetUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
+func (repo *Repository) GetUserByID(userID int) (*User, error) {
+	user := &User{}
+	query := `SELECT user_id, name, email, password, phone, rating, created_at FROM users WHERE user_id = $1`
+	err := repo.DB.QueryRow(query, userID).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Phone, &user.Rating, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// UpdateUser updates only the phone field.
 func (repo *Repository) UpdateUser(user *User) error {
 	query := `
         UPDATE users
-        SET phone = COALESCE($1, phone),
-            rating = COALESCE($2, rating)
-        WHERE user_id = $3
+        SET phone = COALESCE($1, phone)
+        WHERE user_id = $2
         RETURNING user_id, name, email, phone, rating, created_at
     `
-	return repo.DB.QueryRow(query, nullIfEmpty(user.Phone), nullIfZero(user.Rating), user.ID).
+	return repo.DB.QueryRow(query, nullIfEmpty(user.Phone), user.ID).
 		Scan(&user.ID, &user.Name, &user.Email, &user.Phone, &user.Rating, &user.CreatedAt)
 }
 
-func nullIfEmpty(s *string) *string {
-    if s == nil || *s == "" {
-        return nil
-    }
-    return s
+func (repo *Repository) UpdateUserPassword(userID int, hashedPwd string) error {
+	query := `UPDATE users SET password = $1 WHERE user_id = $2`
+	_, err := repo.DB.Exec(query, hashedPwd, userID)
+	return err
 }
 
-func nullIfZero(f float64) *float64 {
-	if f == 0 {
+func nullIfEmpty(s *string) *string {
+	if s == nil || *s == "" {
 		return nil
 	}
-	return &f
+	return s
 }

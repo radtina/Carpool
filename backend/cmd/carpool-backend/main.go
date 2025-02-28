@@ -8,6 +8,8 @@ import (
 	"carpool/backend/internal/user"
 	"log"
 	"net/http"
+
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -33,12 +35,29 @@ func main() {
 	middleware.SetJWTKey([]byte(cfg.JWTSecret))
 
 	// Routes for User domain.
+	// Assuming userHandler is already initialized
 	http.HandleFunc("/register", userHandler.RegisterHandler)
 	http.HandleFunc("/login", userHandler.LoginHandler)
-	http.HandleFunc("/profile", middleware.JWTMiddleware(userHandler.UpdateProfileHandler, []byte(cfg.JWTSecret)))
+	http.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTMiddleware(userHandler.GetProfileHandler, []byte(cfg.JWTSecret))(w, r)
+		} else if r.Method == http.MethodPatch {
+			middleware.JWTMiddleware(userHandler.UpdateProfileHandler, []byte(cfg.JWTSecret))(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	//http.HandleFunc("/profile/picture", middleware.JWTMiddleware(userHandler.UploadProfilePicture, []byte(cfg.JWTSecret)))
+
+	http.HandleFunc("/profile/password", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPatch {
+			middleware.JWTMiddleware(userHandler.ChangePasswordHandler, []byte(cfg.JWTSecret))(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	// Routes for Ride domain.
-	// POST endpoint for creating rides.
 	http.HandleFunc("/rides", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			// POST requires JWT authentication.
@@ -47,7 +66,6 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	// GET endpoint for geospatial ride search.
 	http.HandleFunc("/rides/search", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			// GET is public for search.
@@ -56,6 +74,11 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
+
+	// Serve static files from the "uploads" directory at the "/uploads" path
+	//http.Handle("/uploads/",
+	//	http.StripPrefix("/uploads/",
+	//		http.FileServer(http.Dir("./uploads"))))
 
 	// Routes for Booking domain.
 	http.HandleFunc("/bookings", func(w http.ResponseWriter, r *http.Request) {
@@ -68,12 +91,23 @@ func main() {
 		}
 	})
 
+	// Set up CORS options.
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
+
+	// Wrap the default mux with the CORS handler.
+	handler := c.Handler(http.DefaultServeMux)
+
 	// TLS or HTTP fallback.
 	if cfg.TLSCertFile != "" && cfg.TLSKeyFile != "" {
 		log.Println("Server started on :8443 with HTTPS")
-		log.Fatal(http.ListenAndServeTLS(":8443", cfg.TLSCertFile, cfg.TLSKeyFile, nil))
+		log.Fatal(http.ListenAndServeTLS(":8443", cfg.TLSCertFile, cfg.TLSKeyFile, handler))
 	} else {
 		log.Println("TLS_CERT_FILE or TLS_KEY_FILE not set, falling back to HTTP on :8080")
-		log.Fatal(http.ListenAndServe(":8080", nil))
+		log.Fatal(http.ListenAndServe(":8080", handler))
 	}
 }

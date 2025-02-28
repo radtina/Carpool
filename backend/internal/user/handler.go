@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"time"
 
 	"carpool/backend/internal/middleware"
@@ -68,22 +69,72 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
-func (h *Handler) UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut && r.Method != http.MethodPatch {
-		http.Error(w, "Only PUT or PATCH allowed", http.StatusMethodNotAllowed)
+func (h *Handler) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// Retrieve user id from JWT middleware context.
 	userID := middleware.GetUserIDFromContext(r.Context())
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	user, err := h.Service.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "Error fetching profile", http.StatusInternalServerError)
 		return
 	}
-	user.ID = userID
-	if err := h.Service.UpdateProfile(&user); err != nil {
+	user.Password = ""
+	json.NewEncoder(w).Encode(user)
+}
+
+func (h *Handler) UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
+	// Only updates the phone number.
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Only PATCH allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID := middleware.GetUserIDFromContext(r.Context())
+	var updates struct {
+		Phone string `json:"phone"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if updates.Phone != "" {
+		// Validate phone is numeric
+		matched, err := regexp.MatchString(`^[0-9]*$`, updates.Phone)
+		if err != nil || !matched {
+			http.Error(w, "Phone must contain only numbers", http.StatusBadRequest)
+			return
+		}
+	}
+	updatedUser, err := h.Service.UpdateUserProfile(userID, updates.Phone)
+	if err != nil {
 		http.Error(w, "Error updating profile", http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(user)
+	updatedUser.Password = ""
+	json.NewEncoder(w).Encode(updatedUser)
 }
+
+func (h *Handler) ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Only PATCH allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID := middleware.GetUserIDFromContext(r.Context())
+	var pwd struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&pwd); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if err := h.Service.ChangeUserPassword(userID, pwd.CurrentPassword, pwd.NewPassword); err != nil {
+		http.Error(w, "Error changing password", http.StatusUnauthorized)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Password changed successfully"})
+}
+
+

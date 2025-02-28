@@ -47,6 +47,7 @@ func PostRideHandler(w http.ResponseWriter, r *http.Request) {
 		ride.ToLocation,
 		ride.Price,
 		ride.RideTime,
+		ride.ETA,
 		ride.AvailableSeats,
 		ride.CarType,
 		ride.RideStatus,

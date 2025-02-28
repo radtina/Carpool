@@ -1,18 +1,30 @@
 package ride
 
+import (
+    "time"
+)
+
+// Service struct holds a reference to the Repository
 type Service struct {
-	Repo *Repository
+    Repo *Repository
 }
 
-// CreateRide delegates ride creation to the repository.
+// CreateRide delegates ride creation to the repository
 func (s *Service) CreateRide(ride *Ride) error {
-	return s.Repo.CreateRide(ride)
+    return s.Repo.CreateRide(ride)
 }
 
-// SearchRidesGeo accepts coordinate values and returns matching rides based on geospatial criteria.
-func (s *Service) SearchRidesGeo(fromLon, fromLat, toLon, toLat float64) ([]*Ride, error) {
-	// Define distance thresholds in meters. Adjust these values as needed.
-	const maxOriginDistance = 5000.0
-	const maxDestDistance = 5000.0
-	return s.Repo.SearchRidesGeo(fromLon, fromLat, toLon, toLat, maxOriginDistance, maxDestDistance)
+// GetAllRides fetches all rides without filters
+func (s *Service) GetAllRides() ([]*Ride, error) {
+    return s.Repo.GetAllRides()
+}
+
+// SearchRidesFiltered applies geospatial proximity, time compatibility, and seat availability
+func (s *Service) SearchRidesFiltered(fromLon, fromLat, toLon, toLat float64, rideTime time.Time, numPeople int) ([]*Ride, error) {
+    // ±5 hours
+    timeLowerBound := rideTime.Add(-5 * time.Hour)
+    timeUpperBound := rideTime.Add(5 * time.Hour)
+    maxDistance := 5000.0 // 5 km in meters
+
+    return s.Repo.SearchRidesFiltered(fromLon, fromLat, toLon, toLat, timeLowerBound, timeUpperBound, numPeople, maxDistance)
 }
