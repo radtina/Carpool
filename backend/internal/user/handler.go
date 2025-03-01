@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -45,14 +46,25 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		log.Printf("Error decoding login request: %v", err)
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+
+	// Debug: log the login attempt
+	log.Printf("Login attempt for email: %s", creds.Email)
+
 	user, err := h.Service.Login(creds.Email, creds.Password)
 	if err != nil {
+		// Debug: log detailed error information
+		log.Printf("Login error for email %s: %v", creds.Email, err)
 		http.Error(w, "User not found or invalid password", http.StatusUnauthorized)
 		return
 	}
+
+	log.Printf("User found: %+v", user)
+	log.Printf("Stored hash: %s", user.Password) // Log the stored hash for debugging
+
 	expirationTime := time.Now().Add(1 * time.Hour)
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
@@ -63,9 +75,12 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(h.JWTKey)
 	if err != nil {
+		log.Printf("Error signing token for email %s: %v", creds.Email, err)
 		http.Error(w, "Could not generate token", http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("Login successful for email %s, token: %s", creds.Email, tokenString)
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
@@ -136,5 +151,3 @@ func (h *Handler) ChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Password changed successfully"})
 }
-
-

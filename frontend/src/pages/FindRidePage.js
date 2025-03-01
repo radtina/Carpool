@@ -1,5 +1,3 @@
-// src/pages/FindRidePage.js
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -20,6 +18,7 @@ function FindRidePage() {
 
   // Other form states
   const [date, setDate] = useState('');
+  const [time, setTime] = useState(''); // New state for time field
   const [numPeople, setNumPeople] = useState('');
 
   const navigate = useNavigate();
@@ -57,12 +56,12 @@ function FindRidePage() {
   };
 
   const handleToSelect = (suggestion) => {
-    setToQuery(suggestion.display_name);            // Fill the text field
+    setToQuery(suggestion.display_name);
     setToCoords({ 
       lat: parseFloat(suggestion.lat), 
       lon: parseFloat(suggestion.lon) 
     });
-    setToSuggestions([]);                           // Hide the dropdown
+    setToSuggestions([]);
   };
 
   // Handlers for "From" field
@@ -101,7 +100,8 @@ function FindRidePage() {
       fromLon: fromCoords.lon,
       toLat: toCoords.lat,
       toLon: toCoords.lon,
-      rideTime: date,
+      rideDate: date, // Date from the new date input
+      rideTime: time, // New time field value
       numPeople: numPeople,
     };
     await performSearch(params);
@@ -170,6 +170,14 @@ function FindRidePage() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            required
+          />
+
+          {/* Time (New Field) */}
+          <RoundedInput
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
             required
           />
 

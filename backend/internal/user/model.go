@@ -1,6 +1,8 @@
 package user
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID        int       `json:"id,omitempty"`
@@ -8,6 +10,6 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  string    `json:"password,omitempty"`
 	Phone     *string   `json:"phone,omitempty"`
-	Rating    float64   `json:"rating,omitempty"`
+	Rating    *float64  `json:"rating,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitempty"`
 }

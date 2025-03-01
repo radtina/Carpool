@@ -1,42 +1,54 @@
 -- Enable the PostGIS extension (if not already enabled)
+psql -U postgres -d carpool -h localhost
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Create Users table
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    phone VARCHAR(20),
-    rating NUMERIC(3,2),
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    rating DECIMAL(3,2),
+    profile_pic VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create Rides table
-CREATE TABLE IF NOT EXISTS rides (
+CREATE TABLE rides (
     ride_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
-    price NUMERIC(8,2) NOT NULL,
-    ride_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    available_seats INTEGER,
-    car_type VARCHAR(50),
-    ride_status VARCHAR(20),
+    user_id INTEGER NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    ride_time TIMESTAMP NOT NULL,
+    available_seats INTEGER NOT NULL,
+    car_type VARCHAR(100),
+    ride_status VARCHAR(50),
     additional_notes TEXT,
-    from_lon DOUBLE PRECISION,  -- origin longitude
-    from_lat DOUBLE PRECISION,  -- origin latitude
-    to_lon DOUBLE PRECISION,    -- destination longitude
-    to_lat DOUBLE PRECISION,    -- destination latitude
-    origin geometry(Point,4326),
-    destination geometry(Point,4326),
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+    eta VARCHAR(50),
+    from_lat NUMERIC(10,7) NOT NULL,
+    from_lon NUMERIC(10,7) NOT NULL,
+    to_lat NUMERIC(10,7) NOT NULL,
+    to_lon NUMERIC(10,7) NOT NULL,
+    from_address VARCHAR(255),
+    to_address VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user
+        FOREIGN KEY(user_id)
+            REFERENCES users(user_id)
 );
 
 -- Create Bookings table
-CREATE TABLE IF NOT EXISTS bookings (
+CREATE TABLE bookings (
     booking_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
-    ride_id INTEGER REFERENCES rides(ride_id),
+    user_id INTEGER NOT NULL,
+    ride_id INTEGER NOT NULL,
     seat_count INTEGER NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending',
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+    status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_booking_user
+        FOREIGN KEY(user_id)
+            REFERENCES users(user_id),
+    CONSTRAINT fk_booking_ride
+        FOREIGN KEY(ride_id)
+            REFERENCES rides(ride_id)
 );

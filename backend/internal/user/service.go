@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"log"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,8 +24,9 @@ func (s *Service) Login(email, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
+	// Log the retrieved hash for debugging
+	log.Printf("Comparing stored hash %s with password %s", user.Password, password)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, err
 	}
 	return user, nil

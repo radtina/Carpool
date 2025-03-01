@@ -34,22 +34,22 @@ func (r *Repository) CreateRide(ride *Ride) error {
 	return r.DB.QueryRow(
 		query,
 		ride.UserID,
-		ride.FromLon, 
-        ride.FromLat,
-		ride.ToLon, 
-        ride.ToLat,
-		ride.FromAddress, 
-        ride.ToAddress,
-		ride.Price, 
-        ride.RideTime,
-		ride.AvailableSeats, 
-        ride.CarType,
+		ride.FromLon,
+		ride.FromLat,
+		ride.ToLon,
+		ride.ToLat,
+		ride.FromAddress,
+		ride.ToAddress,
+		ride.Price,
+		ride.RideTime,
+		ride.AvailableSeats,
+		ride.CarType,
 	).Scan(&ride.RideID, &ride.CreatedAt)
 }
 
 // GetAllRides retrieves all rides ordered by ride_time.
 func (r *Repository) GetAllRides() ([]*Ride, error) {
-    query := `
+	query := `
         SELECT 
             r.ride_id, 
             r.user_id,
@@ -72,42 +72,41 @@ func (r *Repository) GetAllRides() ([]*Ride, error) {
         LEFT JOIN users u ON r.user_id = u.user_id
         ORDER BY r.ride_time ASC
     `
-    rows, err := r.DB.Query(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var rides []*Ride
-    for rows.Next() {
-        var ride Ride
-        err := rows.Scan(
-            &ride.RideID,
-            &ride.UserID,
-            &ride.FromLon, 
-            &ride.FromLat,
-            &ride.ToLon, 
-            &ride.ToLat,
-            &ride.FromAddress, 
-            &ride.ToAddress,
-            &ride.Price, 
-            &ride.RideTime,
-            &ride.AvailableSeats, 
-            &ride.CarType,
-            &ride.RideStatus, 
-            &ride.AdditionalNotes, 
-            &ride.ETA,
-            &ride.CreatedAt,
-            &ride.DriverName,
-        )
-        if err != nil {
-            return nil, err
-        }
-        rides = append(rides, &ride)
-    }
-    return rides, nil
+	var rides []*Ride
+	for rows.Next() {
+		var ride Ride
+		err := rows.Scan(
+			&ride.RideID,
+			&ride.UserID,
+			&ride.FromLon,
+			&ride.FromLat,
+			&ride.ToLon,
+			&ride.ToLat,
+			&ride.FromAddress,
+			&ride.ToAddress,
+			&ride.Price,
+			&ride.RideTime,
+			&ride.AvailableSeats,
+			&ride.CarType,
+			&ride.RideStatus,
+			&ride.AdditionalNotes,
+			&ride.ETA,
+			&ride.CreatedAt,
+			&ride.DriverName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		rides = append(rides, &ride)
+	}
+	return rides, nil
 }
-
 
 // SearchRidesFiltered applies geospatial filtering (via PostGIS), time window filtering, and seat availability filtering. It returns rides matching the criteria.
 func (r *Repository) SearchRidesFiltered(
@@ -148,11 +147,11 @@ func (r *Repository) SearchRidesFiltered(
         ORDER BY ride_time ASC
     `
 	rows, err := r.DB.Query(query,
-		fromLon, 
-        fromLat,
+		fromLon,
+		fromLat,
 		maxDistance,
-		toLon, 
-        toLat,
+		toLon,
+		toLat,
 		timeLowerBound,
 		timeUpperBound,
 		numPeople,
@@ -168,16 +167,16 @@ func (r *Repository) SearchRidesFiltered(
 		err := rows.Scan(
 			&ride.RideID,
 			&ride.UserID,
-			&ride.FromLon, 
-            &ride.FromLat,
-			&ride.ToLon, 
-            &ride.ToLat,
-			&ride.FromAddress, 
-            &ride.ToAddress,
-			&ride.Price, 
-            &ride.RideTime,
-			&ride.AvailableSeats, 
-            &ride.CarType,
+			&ride.FromLon,
+			&ride.FromLat,
+			&ride.ToLon,
+			&ride.ToLat,
+			&ride.FromAddress,
+			&ride.ToAddress,
+			&ride.Price,
+			&ride.RideTime,
+			&ride.AvailableSeats,
+			&ride.CarType,
 			&ride.CreatedAt,
 		)
 		if err != nil {
