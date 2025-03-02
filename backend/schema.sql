@@ -32,9 +32,7 @@ CREATE TABLE rides (
     from_address VARCHAR(255),
     to_address VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user
-        FOREIGN KEY(user_id)
-            REFERENCES users(user_id)
+    CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(user_id)
 );
 
 -- Create Bookings table
@@ -45,10 +43,6 @@ CREATE TABLE bookings (
     seat_count INTEGER NOT NULL,
     status VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_booking_user
-        FOREIGN KEY(user_id)
-            REFERENCES users(user_id),
-    CONSTRAINT fk_booking_ride
-        FOREIGN KEY(ride_id)
-            REFERENCES rides(ride_id)
+    CONSTRAINT fk_booking_user FOREIGN KEY(user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_booking_ride FOREIGN KEY(ride_id) REFERENCES rides(ride_id)
 );

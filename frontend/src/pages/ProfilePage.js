@@ -15,18 +15,10 @@ function ProfilePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-
-  // Hidden file input for profile picture upload
   const fileInputRef = useRef(null);
-
-  // Modal states
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showChangeModal, setShowChangeModal] = useState(false);
-
-  // Only editable field: phone
   const [editPhone, setEditPhone] = useState('');
-
-  // Password change fields
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -185,7 +177,7 @@ function ProfilePage() {
           <RoundedInput type="email" placeholder="Email" value={email} readOnly />
           <RoundedInput
             type="number"
-            placeholder="Phone (numbers only, optional)"
+            placeholder={editPhone == "" ? "Phone Number" : ""}  
             value={editPhone}
             onChange={(e) => setEditPhone(e.target.value)}
           />

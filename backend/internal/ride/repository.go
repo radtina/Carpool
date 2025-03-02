@@ -133,13 +133,13 @@ func (r *Repository) SearchRidesFiltered(
         FROM rides
         WHERE
             ST_DWithin(
-                ST_SetSRID(ST_MakePoint(from_lon, from_lat), 4326),
-                ST_SetSRID(ST_MakePoint($1, $2), 4326),
+                ST_SetSRID(ST_MakePoint(from_lon, from_lat), 4326)::geography,
+                ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
                 $3
             )
             AND ST_DWithin(
-                ST_SetSRID(ST_MakePoint(to_lon, to_lat), 4326),
-                ST_SetSRID(ST_MakePoint($4, $5), 4326),
+                ST_SetSRID(ST_MakePoint(to_lon, to_lat), 4326)::geography,
+                ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography,
                 $3
             )
             AND ride_time BETWEEN $6 AND $7
