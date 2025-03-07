@@ -1,83 +1,165 @@
 // src/components/RideCard.js
 import React, { useState } from 'react';
+// You can optionally import icons from a library like react-icons or use your own SVGs
+// import { FaRegClock, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 
-function RideCard({ from_address, to_address, ride_time, eta, price, driverName, rating, onClick }) {
+function RideCard({
+  from_address,
+  to_address,
+  ride_time,
+  eta,
+  price,
+  driverName,
+  rating,
+  onClick
+}) {
   const [hovered, setHovered] = useState(false);
+
+  // Format the ride time more nicely if needed
+  const formattedTime = ride_time
+    ? `${new Date(ride_time).toLocaleDateString()} ${new Date(ride_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : '';
 
   return (
     <div
       style={{
         ...styles.card,
-        ...(hovered ? styles.cardHover : {}),
+        ...(hovered ? styles.cardHover : {})
       }}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Row 1 */}
-      <div style={{ gridColumn: '1', gridRow: '1' }}>{from_address}</div>
-      <div style={{ ...styles.secondCol, gridColumn: '2', gridRow: '1' }}>{ride_time}</div>
-      <div style={{ gridColumn: '3', gridRow: '1', textAlign: 'right' }}>{price} €</div>
-
-      {/* Row 2 */}
-      <div style={styles.arrowCell}>↓</div>
-      {/* Columns 2 & 3 of row 2 are empty */}
-
-      {/* Row 3 */}
-      <div style={{ gridColumn: '1', gridRow: '3' }}>{to_address}</div>
-      <div style={{ ...styles.secondCol, gridColumn: '2', gridRow: '3' }}>{eta}</div>
-      {/* Column 3 of row 3 is empty */}
-
-      {/* Row 4 */}
-      <div style={{ gridColumn: '1', gridRow: '4' }}>
-        <img src="/profilepic.svg" alt="Driver" style={styles.profilePic} />
+      {/* Top row: FROM city/time, price on the right */}
+      <div style={styles.topRow}>
+        <div style={styles.cityTime}>
+          {/* If you have icons, you can use something like: 
+             <FaMapMarkerAlt style={styles.icon} /> 
+          */}
+          <span style={styles.city}>{from_address}</span>
+          <span style={styles.time}>{formattedTime}</span>
+        </div>
+        <div style={styles.price}>
+          {price} €
+        </div>
       </div>
-      <div style={{ ...styles.secondCol, gridColumn: '2', gridRow: '4' }}>{driverName}</div>
-      <div style={{ gridColumn: '3', gridRow: '4', textAlign: 'right' }}>{rating} ★</div>
+
+      {/* Middle row: arrow or dash indicating going from -> to */}
+      <div style={styles.row}>
+        <div style={styles.arrow}>
+        ⋮
+        </div>
+      </div>
+
+      {/* Next row: TO city/time, optional ETA */}
+      <div style={styles.row}>
+        <div style={styles.cityTime}>
+          <span style={styles.city}>{to_address}</span>
+          {eta && <span style={styles.time}>{eta}</span>}
+        </div>
+      </div>
+
+      {/* Bottom row: Driver info + rating */}
+      <div style={styles.row}>
+        <div style={styles.driver}>
+          <img src="/profilepic.svg" alt="Driver" style={styles.profilePic} />
+          <span style={styles.driverName}>{driverName}</span>
+        </div>
+        <div style={styles.rating}>
+          {/* If you have an icon, you can do: <FaStar style={styles.starIcon} /> */}
+          {rating} ★
+        </div>
+      </div>
     </div>
   );
 }
 
 const styles = {
   card: {
-    width: '250px',
-    display: 'grid',
-    gridTemplateColumns: '0.6fr 1fr 1fr',       // 3 columns
-    gridTemplateRows: '1fr 1fr 1fr 1fr',  // 4 rows
-    gap: '5px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    border: '2px solid #fff',
-    borderRadius: '8px',
+    // Basic layout
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backdropFilter: 'blur(8px)',
+
+    // Size & spacing
+    width: '300px',
+    minHeight: '180px',
     padding: '20px',
     boxSizing: 'border-box',
+    margin: '0 auto',
+
+    // Frosted glass-like background
+    //backdropFilter: 'blur(8px)', // This requires the container to have background/backdrop support
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+
+    // Text & visuals
     color: '#fff',
     cursor: 'pointer',
     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   },
   cardHover: {
-    transform: 'scale(1.05)',
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
+    transform: 'scale(1.03)',
+    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.25)',
   },
-  secondCol: {
-    textAlign: 'left',
-    justifySelf: 'start', // Align content to start of the cell
-    paddingRight: '0px',   // Remove extra left padding
-  },
-  arrowCell: {
-    gridColumn: '1',
-    gridRow: '2',
+  row: {
     display: 'flex',
-    alignItems: 'left',
-    justifyContent: 'left',
-    paddingLeft: '9px',
-
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '10px',
+  },
+  cityTime: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  city: {
+    fontSize: '1rem',
+    fontWeight: '600',
+  },
+  time: {
+    fontSize: '0.9rem',
+    opacity: 0.8,
+  },
+  arrow: {
+    fontSize: '1.5rem',
+    color: '#fff',
+    opacity: 0.7,
+    textAlign: 'center',
+    width: '20%',
+  },
+  price: {
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    textAlign: 'right',
+    width: '50%',
+    
+  },
+  driver: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  driverName: {
+    fontSize: '0.9rem',
+  },
+  rating: {
+    fontSize: '0.9rem',
+    fontWeight: 'bold',
   },
   profilePic: {
     width: '24px',
     height: '24px',
     borderRadius: '50%',
-    border: '1px solid #ccc',
     objectFit: 'cover',
+    border: '1px solid #ccc',
+  },
+  topRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '20px',
+    alignItems: 'flex-start', // align items at the top
   },
 };
 

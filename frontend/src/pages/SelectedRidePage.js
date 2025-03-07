@@ -7,14 +7,14 @@ import Modal from '../components/Modal';
 
 function SelectedRidePage() {
   const location = useLocation();
-  const ride = location.state?.ride; // The ride data passed from ChooseRidePage
+  const ride = location.state?.ride;
   const [showBookingModal, setShowBookingModal] = useState(false);
 
   if (!ride) {
     return (
       <>
         <Navbar />
-        <div style={styles.container}>
+        <div style={styles.noRideContainer}>
           <h2>No ride data available</h2>
         </div>
       </>
@@ -34,65 +34,72 @@ function SelectedRidePage() {
     setShowBookingModal(false);
   };
 
+  // Format ride time (for starting time) and ETA (arrival time)
+  const formattedRideTime = ride.ride_time
+  ? `${new Date(ride.ride_time).toLocaleDateString()} ${new Date(ride.ride_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+  : '';
+  const formattedETA = ride.eta || ''; // Assuming ETA is a string; otherwise, format as needed
+
   return (
     <>
       <Navbar />
       <div style={styles.container}>
-        <h2 style={styles.title}>Selected Ride Details</h2>
         <div style={styles.card}>
-          {/* Row 1: Driver pic, name, rating */}
+          {/* Top Row: Driver info */}
           <div style={styles.topRow}>
-            <div style={styles.name}>
+            <div style={styles.driverInfo}>
               <img
                 src="/profilepic.svg"
                 alt="Driver"
                 style={styles.profilePic}
               />
-              <span>{ride.driver_name}</span>
+              <span style={styles.driverName}>{ride.driver_name || 'Name'}</span>
             </div>
-            <div style={styles.rating}>{ride.rating} ★</div>
+            <div style={styles.rating}>{ride.rating || '4.8'} ★</div>
           </div>
 
-          {/* Row 2: City + Start Time */}
-          <div style={styles.row}>
-            <span style={styles.cityText}>
-              {ride.from_address}
-              <span style={styles.spacing} />
-              {ride.ride_time}
-            </span>
+          {/* Middle Section: Starting point and destination */}
+          <div style={styles.infoSection}>
+            {/* Starting point */}
+            <div style={styles.infoBlock}>
+
+              <span style={styles.address}>{ride.from_address || 'City A'}</span>
+              <span style={styles.time}>{formattedRideTime || '08:30'}</span>
+            </div>
+
+            {/* Middle row: arrow or dash indicating going from -> to */}
+            <div style={styles.row}>
+              <div style={styles.arrow}>
+              ⋮
+              </div>
+            </div>
+
+            {/* Destination */}
+            <div style={styles.infoBlock}>
+              <span style={styles.address}>{ride.to_address || 'City B'}</span>
+              <span style={styles.time}>{formattedETA || '10:30'}</span>
+            </div>
           </div>
 
-          {/* Row 3: Arrow on the left */}
-          <div style={styles.arrowRow}>
-            <span style={styles.arrow}>↓</span>
-          </div>
-
-          {/* Row 4: Destination city + ETA */}
-          <div style={styles.row}>
-            <span style={styles.cityText}>
-              {ride.to_address}
-              <span style={styles.spacing} />
-              {ride.eta}
-            </span>
-          </div>
-
-          {/* Row 5: Car icon, car type, and price all together */}
-          <div style={styles.topRow}>
+          {/* Bottom Section: Car info and Price */}
+          <div style={styles.bottomRow}>
             <div style={styles.carInfo}>
               <img src="/caricon.svg" alt="Car" style={styles.carIcon} />
-              <span style={styles.carType}>{ride.carType}</span>
+              <span style={styles.carType}>{ride.carType || 'Honda Civic'}</span>
             </div>
-            <div>
-              <span style={styles.price}>{ride.price} €</span>
+            <div style={styles.priceContainer}>
+              <span style={styles.price}>{ride.price || 21} €</span>
             </div>
           </div>
 
-          {/* Row 6: Book & Message buttons */}
-          <div style={styles.buttonContainer}>
+          {/* Button Row */}
+          <div style={styles.buttonRow}>
             <RoundedButton style={styles.bookButton} onClick={handleBookClick}>
               Book
             </RoundedButton>
-            <RoundedButton style={styles.msgButton}>Message</RoundedButton>
+            <RoundedButton style={styles.msgButton}>
+              Message
+            </RoundedButton>
           </div>
         </div>
       </div>
@@ -115,87 +122,123 @@ function SelectedRidePage() {
 }
 
 const styles = {
+  // Full-page container with background image
   container: {
-    maxWidth: '400px',
-    margin: '50px auto',
-    padding: '20px',
+    width: '100%',
+    minHeight: '100vh',
+    padding: '40px 20px',
     boxSizing: 'border-box',
-    backgroundColor: '#333',
-    textAlign: 'center',
-    color: '#fff',
-    borderRadius: '8px',
+    background: "url('/background.jpg') center center / cover no-repeat",
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundBlendMode: 'darken',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: {
-    marginBottom: '30px',
+  noRideContainer: {
+    width: '100%',
+    minHeight: '100vh',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: '#fff',
+    background: "url('/background.jpg') center center / cover no-repeat",
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundBlendMode: 'darken',
   },
   card: {
-    border: '1px solid #fff',
-    borderRadius: '8px',
-    padding: '20px',
+    width: '550px',
+    height: '450px',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backdropFilter: 'blur(8px)',
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    padding: '30px',
     boxSizing: 'border-box',
-    textAlign: 'left',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    color: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   topRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: '10px',
+    alignItems: 'center',
   },
-  name: {
+  driverInfo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
+    gap: '10px',
   },
   profilePic: {
-    width: '32px',
-    height: '32px',
+    width: '60px',
+    height: '60px',
     borderRadius: '50%',
     objectFit: 'cover',
-    border: '1px solid #ccc',
+    border: '2px solid #ccc',
+  },
+  driverName: {
+    fontSize: '1.3rem',
+    fontWeight: '600',
   },
   rating: {
+    fontSize: '1.3rem',
     fontWeight: 'bold',
   },
-  row: {
+  infoSection: {
+    marginTop: '20px',
     display: 'flex',
-    alignItems: 'center',
-    marginBottom: '10px',
+    flexDirection: 'column',
+    gap: '15px',
   },
-  arrowRow: {
+  infoBlock: {
     display: 'flex',
-    justifyContent: 'flex-start',
-    marginBottom: '10px',
+    flexDirection: 'column',
   },
-  arrow: {
-    fontSize: '24px',
-    marginLeft: '10px',
+  label: {
+    fontSize: '1.3rem',
+    fontWeight: '600',
+    marginBottom: '3px',
   },
-  cityText: {
+  address: {
+    fontSize: '1.1rem',
+    fontWeight: '500',
+  },
+  time: {
     fontSize: '1rem',
-    fontWeight: 'normal',
+    opacity: 0.8,
   },
-  spacing: { // Adds space between city and time
-    display: 'inline-block',
-    width: '10px',
+  bottomRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '20px',
+    marginBottom: '5px',
   },
   carInfo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '18px',
+    gap: '10px',
   },
   carIcon: {
-    width: '30px',
-    height: '30px',
+    width: '40px',
+    height: '40px',
   },
   carType: {
-    fontSize: '1rem',
+    fontSize: '1.1rem',
     fontWeight: 'bold',
+  },
+  priceContainer: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    flex: 1,
   },
   price: {
-    fontSize: '1rem',
+    fontSize: '1.3rem',
     fontWeight: 'bold',
   },
-  buttonContainer: {
+  buttonRow: {
     display: 'flex',
     gap: '10px',
     marginTop: '20px',
@@ -205,8 +248,13 @@ const styles = {
   },
   msgButton: {
     flex: 1,
-    backgroundColor: '#fff',
-    color: '#000',
+  },
+  arrow: {
+    fontSize: '1.5rem',
+    color: '#fff',
+    opacity: 0.7,
+    textAlign: 'center',
+    width: '10%',
   },
   modalButtonContainer: {
     display: 'flex',

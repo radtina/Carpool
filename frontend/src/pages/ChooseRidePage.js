@@ -44,22 +44,25 @@ function ChooseRidePage() {
 
 const styles = {
   container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '20px',
+    width: '100%',
+    minHeight: '100vh',
+    padding: '40px 20px',
+    background: "url('/background.jpg') center center / cover no-repeat",
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundBlendMode: 'darken',
     boxSizing: 'border-box',
-    backgroundColor: '#333',
   },
   title: {
     textAlign: 'center',
-    marginBottom: '20px',
+    marginBottom: '40px',
     color: '#fff',
+
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 250px)',
+    gridTemplateColumns: 'repeat(auto-fill, 300px)',
     columnGap: '50px',
-    rowGap: '20px',
+    rowGap: '50px',
     justifyContent: 'center',
   },
   error: {

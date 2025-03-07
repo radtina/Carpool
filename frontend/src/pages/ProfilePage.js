@@ -1,29 +1,32 @@
 // src/pages/ProfilePage.js
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Modal from '../components/Modal';
 import RoundedInput from '../components/RoundedInput';
 import RoundedButton from '../components/RoundedButton';
+import Modal from '../components/Modal';
 import api from '../services/api';
 
 function ProfilePage() {
-  const navigate = useNavigate();
-
-  // Profile data from backend
-  const [profile_pic, setProfilePic] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const fileInputRef = useRef(null);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    profile_pic: '',
+  });
   const [editPhone, setEditPhone] = useState('');
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  // State for change password
+  const [showChangeModal, setShowChangeModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Fetch user profile on mount
+  const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Fetch user profile when the component mounts
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -31,10 +34,7 @@ function ProfilePage() {
         const response = await api.get('/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setName(response.data.name || '');
-        setEmail(response.data.email || '');
-        setPhone(response.data.phone || '');
-        setProfilePic(response.data.profile_pic || ''); // fetch persisted profile pic URL
+        setProfile(response.data);
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -43,7 +43,7 @@ function ProfilePage() {
     fetchProfile();
   }, []);
 
-  // Upload and update profile picture
+  // Handle profile picture upload
   const handleProfilePicClick = () => {
     fileInputRef.current.click();
   };
@@ -53,44 +53,38 @@ function ProfilePage() {
     if (file) {
       const formData = new FormData();
       formData.append('profile_pic', file);
-      const token = localStorage.getItem('token');
       try {
-        const uploadResponse = await api.post('/profile/picture', formData, {
-          headers: { Authorization: `Bearer ${token}` },
+        const token = localStorage.getItem('token');
+        const response = await api.post('/profile/picture', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
         });
-        console.log("Upload response:", uploadResponse.data);
-        // Re-fetch the profile after successful upload
-        const profileResponse = await api.get('/profile', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("Re-fetched profile:", profileResponse.data);
-        setProfilePic(profileResponse.data.profile_pic);
-      } catch (err) {
-        console.error('Error uploading profile picture:', err);
+        setProfile({ ...profile, profile_pic: response.data.url });
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
         alert('Error uploading profile picture. Please try again.');
       }
     }
   };
-  
-  
 
-  // Open modal to update phone number
+  // Handle phone update modal
   const handleUpdateProfileOpen = () => {
-    setEditPhone(phone);
+    setEditPhone(profile.phone);
     setShowUpdateModal(true);
   };
 
-  // Save updated phone via PATCH /profile (only phone is updated)
   const handleUpdateProfileSave = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
       const response = await api.patch(
         '/profile',
-        { phone: editPhone.trim() || '' },
+        { phone: editPhone },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setPhone(response.data.phone || '');
+      setProfile({ ...profile, phone: response.data.phone });
       setShowUpdateModal(false);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -98,7 +92,7 @@ function ProfilePage() {
     }
   };
 
-  // Open change password modal
+  // Handle change password modal
   const handleChangePasswordOpen = () => {
     setCurrentPassword('');
     setNewPassword('');
@@ -106,11 +100,10 @@ function ProfilePage() {
     setShowChangeModal(true);
   };
 
-  // Save changed password via PATCH /profile/password
   const handleChangePasswordSave = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match!');
+      alert('New passwords do not match!');
       return;
     }
     try {
@@ -128,7 +121,7 @@ function ProfilePage() {
     }
   };
 
-  // Log out
+  // Logout handler
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
@@ -138,48 +131,59 @@ function ProfilePage() {
     <>
       <Navbar />
       <div style={styles.container}>
-        <h2 style={styles.title}>My Profile</h2>
+        <h2>My Profile</h2>
 
         {/* Profile Picture */}
         <div style={styles.picWrapper} onClick={handleProfilePicClick}>
-        <img src={profile_pic || '/profilepic.svg'} alt="Profile" style={styles.profilepic} />
+          <img
+            src={profile.profile_pic || '/profilepic.svg'}
+            alt="Profile"
+            style={styles.profilePic}
+          />
         </div>
         <input
           type="file"
           accept="image/*"
           ref={fileInputRef}
-          onChange={handleProfilePicChange}
           style={{ display: 'none' }}
+          onChange={handleProfilePicChange}
         />
 
-        {/* Display fields: Name, Email, Phone */}
-        <RoundedInput value={name} readOnly style={styles.readOnlyInput} />
-        <RoundedInput value={email} readOnly style={styles.readOnlyInput} />
-        <RoundedInput value={phone} readOnly style={styles.readOnlyInput} />
+        {/* Profile Details */}
+        <RoundedInput value={profile.name} readOnly style={styles.readOnlyInput} />
+        <RoundedInput value={profile.email} readOnly style={styles.readOnlyInput} />
+        <RoundedInput
+          type="number"
+          placeholder="Phone Number"
+          value={profile.phone || ''}
+          readOnly
+          style={styles.readOnlyInput}
+        />
 
-        {/* Action Buttons */}
-        <RoundedButton onClick={handleChangePasswordOpen} style={styles.button}>
-          Change Password
-        </RoundedButton>
         <RoundedButton onClick={handleUpdateProfileOpen} style={styles.button}>
           Update Phone Number
         </RoundedButton>
+
+        {/* Change Password Button */}
+        <RoundedButton onClick={handleChangePasswordOpen} style={styles.button}>
+          Change Password
+        </RoundedButton>
+
         <RoundedButton onClick={handleLogout} style={styles.button}>
           Log Out
         </RoundedButton>
       </div>
 
-      {/* Update Phone Number Modal */}
+      {/* Modal for Updating Phone Number */}
       <Modal visible={showUpdateModal} onClose={() => setShowUpdateModal(false)}>
         <h3>Edit Profile</h3>
         <form onSubmit={handleUpdateProfileSave} style={styles.modalForm}>
-          <RoundedInput placeholder="Name" value={name} readOnly />
-          <RoundedInput type="email" placeholder="Email" value={email} readOnly />
           <RoundedInput
-            type="number"
-            placeholder={editPhone == "" ? "Phone Number" : ""}  
+            placeholder="Phone Number"
+            type="tel"
             value={editPhone}
             onChange={(e) => setEditPhone(e.target.value)}
+            required
           />
           <div style={styles.modalButtons}>
             <RoundedButton
@@ -196,7 +200,7 @@ function ProfilePage() {
         </form>
       </Modal>
 
-      {/* Change Password Modal */}
+      {/* Modal for Changing Password */}
       <Modal visible={showChangeModal} onClose={() => setShowChangeModal(false)}>
         <h3>Change Password</h3>
         <form onSubmit={handleChangePasswordSave} style={styles.modalForm}>
@@ -247,16 +251,13 @@ const styles = {
     textAlign: 'center',
     boxSizing: 'border-box',
   },
-  title: {
-    marginBottom: '20px',
-  },
   picWrapper: {
     margin: '0 auto 20px',
     width: '100px',
     height: '100px',
     cursor: 'pointer',
   },
-  profilepic: {
+  profilePic: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
