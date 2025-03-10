@@ -42,7 +42,7 @@ func LoadConfig() *Config {
 }
 
 func ConnectDB(cfg *Config) *sql.DB {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost)
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=require", cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
