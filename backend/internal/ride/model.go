@@ -20,6 +20,7 @@ type Ride struct {
 	AdditionalNotes *string   `json:"additional_notes,omitempty"` // changed to pointer
 	CreatedAt       time.Time `json:"created_at,omitempty"`
 	DriverName      *string   `json:"driver_name,omitempty"` // changed to pointer
+	DriverRating    *float64  `json:"driver_rating,omitempty"` 
 
 	// Calculated distances returned from geospatial queries.
 	OriginDistance      float64 `json:"origin_distance,omitempty"`

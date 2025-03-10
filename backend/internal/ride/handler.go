@@ -2,6 +2,7 @@ package ride
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,36 +22,39 @@ func (h *Handler) PostRideHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var ride Ride
-	// Expect JSON payload with coordinate fields: from_lon, from_lat, to_lon, to_lat, etc.
+	// Decode the JSON payload into the Ride struct.
 	if err := json.NewDecoder(r.Body).Decode(&ride); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+	log.Println("Decoded Ride Payload:", ride)
 
-	// Retrieve user ID from JWT middleware context.
+	// Retrieve the user ID from JWT middleware context.
 	ride.UserID = middleware.GetUserIDFromContext(r.Context())
+	log.Println("User ID from JWT context:", ride.UserID)
 
-	// Create the ride via service layer.
+	// Create the ride via the Service layer.
 	if err := h.Service.CreateRide(&ride); err != nil {
+		log.Println("Error creating ride in service:", err)
 		http.Error(w, "Error posting ride", http.StatusInternalServerError)
 		return
 	}
 
+	log.Println("Ride created successfully:", ride)
+	// Write header and JSON response only once.
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(ride)
 }
 
-// SearchRidesHandler checks for "all=true" to return all rides, otherwise applies filters:
-// 1) Geospatial proximity (within 5 km)
-// 2) Time compatibility (±5 hours of rideTime)
-// 3) Seat availability (available_seats >= numPeople)
+// SearchRidesHandler checks for "all=true" to return all rides,
+// otherwise applies filters: geospatial proximity, time window, and seat availability.
 func (h *Handler) SearchRidesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Check if "all" flag is set
+	// Check if "all" flag is set.
 	allParam := r.URL.Query().Get("all")
 	if allParam == "true" {
 		rides, err := h.Service.GetAllRides()
@@ -70,8 +74,9 @@ func (h *Handler) SearchRidesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Read separate date and time parameters.
 	rideDateStr := r.URL.Query().Get("rideDate") // Expected format: "2006-01-02"
-	rideTimeStr := r.URL.Query().Get("rideTime") // Expected format: "15:04" (24-hour format)
+	rideTimeStr := r.URL.Query().Get("rideTime") // Expected format: "15:04"
 	numPeopleStr := r.URL.Query().Get("numPeople")
+	maxDistanceStr := r.URL.Query().Get("maxDistance")
 
 	if fromLonStr == "" || fromLatStr == "" || toLonStr == "" || toLatStr == "" ||
 		rideDateStr == "" || rideTimeStr == "" {
@@ -90,7 +95,6 @@ func (h *Handler) SearchRidesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Combine rideDate and rideTime into a full RFC3339 timestamp.
-	// For example, rideDate "2025-03-02" and rideTime "10:00" become "2025-03-02T10:00:00Z"
 	fullRideTimeStr := rideDateStr + "T" + rideTimeStr + ":00Z"
 	rideTime, err := time.Parse(time.RFC3339, fullRideTimeStr)
 	if err != nil {
@@ -98,7 +102,7 @@ func (h *Handler) SearchRidesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse numPeople parameter (default to 1 if not provided)
+	// Parse numPeople parameter (default to 1 if not provided).
 	numPeople := 1
 	if numPeopleStr != "" {
 		if val, err := strconv.Atoi(numPeopleStr); err == nil {
@@ -106,8 +110,16 @@ func (h *Handler) SearchRidesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Call the service method (which computes the ±5-hour window internally).
-	rides, err := h.Service.SearchRidesFiltered(fromLon, fromLat, toLon, toLat, rideTime, numPeople)
+	// Parse maxDistance parameter (default to 5 if not provided).
+	maxDistance := 5
+	if maxDistanceStr != "" {
+		if val, err := strconv.Atoi(maxDistanceStr); err == nil {
+			maxDistance = val
+		}
+	}
+
+	// Call the Service method to search for rides.
+	rides, err := h.Service.SearchRidesFiltered(fromLon, fromLat, toLon, toLat, rideTime, numPeople, maxDistance)
 	if err != nil {
 		http.Error(w, "Error searching rides", http.StatusInternalServerError)
 		return

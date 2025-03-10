@@ -10,9 +10,8 @@ type Repository struct {
 	DB *sql.DB
 }
 
-// CreateRide inserts a new ride into the database. It returns the ride_id and created_at timestamp.
 func (r *Repository) CreateRide(ride *Ride) error {
-	query := `
+    query := `
         INSERT INTO rides (
             user_id,
             from_lon, 
@@ -25,27 +24,31 @@ func (r *Repository) CreateRide(ride *Ride) error {
             ride_time,
             available_seats, 
             car_type,
+            eta,
             created_at
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()
         )
         RETURNING ride_id, created_at
     `
-	return r.DB.QueryRow(
-		query,
-		ride.UserID,
-		ride.FromLon,
-		ride.FromLat,
-		ride.ToLon,
-		ride.ToLat,
-		ride.FromAddress,
-		ride.ToAddress,
-		ride.Price,
-		ride.RideTime,
-		ride.AvailableSeats,
-		ride.CarType,
-	).Scan(&ride.RideID, &ride.CreatedAt)
+    return r.DB.QueryRow(
+        query,
+        ride.UserID,
+        ride.FromLon,
+        ride.FromLat,
+        ride.ToLon,
+        ride.ToLat,
+        ride.FromAddress,
+        ride.ToAddress,
+        ride.Price,
+        ride.RideTime,
+        ride.AvailableSeats,
+        ride.CarType,
+        ride.ETA,
+    ).Scan(&ride.RideID, &ride.CreatedAt)
 }
+
+
 
 // GetAllRides retrieves all rides ordered by ride_time.
 func (r *Repository) GetAllRides() ([]*Ride, error) {
@@ -67,10 +70,11 @@ func (r *Repository) GetAllRides() ([]*Ride, error) {
             r.additional_notes, 
             r.eta,
             r.created_at,
-            u.name as driver_name
+            u.name as driver_name,
+			u.rating as driver_rating
         FROM rides r
         LEFT JOIN users u ON r.user_id = u.user_id
-        ORDER BY r.ride_time ASC
+        ORDER BY r.ride_time ASC;
     `
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -99,6 +103,7 @@ func (r *Repository) GetAllRides() ([]*Ride, error) {
 			&ride.ETA,
 			&ride.CreatedAt,
 			&ride.DriverName,
+			&ride.DriverRating,
 		)
 		if err != nil {
 			return nil, err
@@ -113,7 +118,7 @@ func (r *Repository) SearchRidesFiltered(
 	fromLon, fromLat, toLon, toLat float64,
 	timeLowerBound, timeUpperBound time.Time,
 	numPeople int,
-	maxDistance float64,
+	maximumDistance int,
 ) ([]*Ride, error) {
 	query := `
         SELECT 
@@ -149,7 +154,7 @@ func (r *Repository) SearchRidesFiltered(
 	rows, err := r.DB.Query(query,
 		fromLon,
 		fromLat,
-		maxDistance,
+		maximumDistance,
 		toLon,
 		toLat,
 		timeLowerBound,

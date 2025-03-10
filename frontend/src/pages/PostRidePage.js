@@ -9,6 +9,14 @@ import Modal from '../components/Modal';
 import api from '../services/api';
 
 function PostRidePage() {
+
+  const now = new Date();
+  const defaultDate = now.toISOString().split('T')[0]; // "yyyy-mm-dd"
+  const defaultTime = new Date(now.getTime() + 60 * 60 * 1000) // add 1 hour
+  .toTimeString()
+  .split(' ')[0]
+  .slice(0, 5); // "HH:MM"
+
   // "To" address states
   const [toQuery, setToQuery] = useState('');
   const [toCoords, setToCoords] = useState({ lat: null, lon: null });
@@ -20,12 +28,12 @@ function PostRidePage() {
   const [fromSuggestions, setFromSuggestions] = useState([]);
 
   // Other ride details
-  const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [price, setPrice] = useState('');
-  const [seats, setSeats] = useState('');
+  const [date, setDate] = useState(defaultDate);
+  const [startTime, setStartTime] = useState(defaultTime);
+  const [price, setPrice] = useState('10');
+  const [seats, setSeats] = useState('2');
   const [instantBooking, setInstantBooking] = useState(false);
-  const [carType, setCarType] = useState('');
+  const [carType, setCarType] = useState('Mercedes');
 
   const [showPostModal, setShowPostModal] = useState(false);
   const navigate = useNavigate();

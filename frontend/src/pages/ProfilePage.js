@@ -13,6 +13,7 @@ function ProfilePage() {
     email: '',
     phone: '',
     profile_pic: '',
+    rating: '',
   });
   const [editPhone, setEditPhone] = useState('');
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -152,6 +153,7 @@ function ProfilePage() {
         {/* Profile Details */}
         <RoundedInput value={profile.name} readOnly style={styles.readOnlyInput} />
         <RoundedInput value={profile.email} readOnly style={styles.readOnlyInput} />
+        <RoundedInput value={profile.rating} readOnly placeholder="Rating" style={styles.readOnlyInput} />
         <RoundedInput
           type="number"
           placeholder="Phone Number"

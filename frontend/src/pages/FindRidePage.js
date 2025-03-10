@@ -6,20 +6,26 @@ import RoundedButton from '../components/RoundedButton';
 import api from '../services/api';
 
 function FindRidePage() {
-  // "To" address states
+
+  const now = new Date();
+  const defaultDate = now.toISOString().split('T')[0]; // "yyyy-mm-dd"
+  const defaultTime = new Date(now.getTime() + 60 * 60 * 1000) // add 1 hour
+  .toTimeString()
+  .split(' ')[0]
+  .slice(0, 5); // "HH:MM"
+
   const [toQuery, setToQuery] = useState('');
   const [toCoords, setToCoords] = useState({ lat: null, lon: null });
   const [toSuggestions, setToSuggestions] = useState([]);
-
-  // "From" address states
   const [fromQuery, setFromQuery] = useState('');
   const [fromCoords, setFromCoords] = useState({ lat: null, lon: null });
   const [fromSuggestions, setFromSuggestions] = useState([]);
+  const [date, setDate] = useState(defaultDate);
+  const [time, setTime] = useState(defaultTime); 
+  const [numPeople, setNumPeople] = useState('1');
+  const [maxDistance, setMaxDistance] = useState('5'); // default 5 km
 
-  // Other form states
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState(''); // New state for time field
-  const [numPeople, setNumPeople] = useState('');
+
 
   const navigate = useNavigate();
 
@@ -103,6 +109,8 @@ function FindRidePage() {
       rideDate: date, // Date from the new date input
       rideTime: time, // New time field value
       numPeople: numPeople,
+      maxDistance: maxDistance,  // pass the selected distance
+
     };
     await performSearch(params);
   };
@@ -192,6 +200,20 @@ function FindRidePage() {
             required
           />
 
+          {/* Slider for distance (maxDistance) */}
+          <div style={styles.sliderContainer}>
+            <label style={styles.sliderLabel}>Max Distance (km): {maxDistance}</label>
+            <input
+              type="range"
+              min="1"
+              max="15"
+              step="1"
+              value={maxDistance}
+              onChange={(e) => setMaxDistance(e.target.value)}
+              style={styles.slider}
+            />
+          </div>
+
           <RoundedButton type="submit" style={styles.button}>
             Search
           </RoundedButton>
@@ -211,6 +233,7 @@ const styles = {
     padding: '20px',
     boxSizing: 'border-box',
     textAlign: 'center',
+    
   },
   form: {
     display: 'grid',

@@ -29,7 +29,7 @@ function ChooseRidePage() {
                 eta={ride.eta}
                 price={ride.price}
                 driver_name={ride.driver_name}
-                rating={ride.rating}
+                driver_rating={ride.driver_rating}
                 onClick={() => handleCardClick(ride)}
               />
             ))}

@@ -1,5 +1,4 @@
 -- Enable the PostGIS extension (if not already enabled)
-psql -U postgres -d carpool -h localhost
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Create Users table
@@ -46,3 +45,4 @@ CREATE TABLE bookings (
     CONSTRAINT fk_booking_user FOREIGN KEY(user_id) REFERENCES users(user_id),
     CONSTRAINT fk_booking_ride FOREIGN KEY(ride_id) REFERENCES rides(ride_id)
 );
+

@@ -9,8 +9,8 @@ function RideCard({
   ride_time,
   eta,
   price,
-  driverName,
-  rating,
+  driver_name,
+  driver_rating,
   onClick
 }) {
   const [hovered, setHovered] = useState(false);
@@ -55,7 +55,7 @@ function RideCard({
       <div style={styles.row}>
         <div style={styles.cityTime}>
           <span style={styles.city}>{to_address}</span>
-          {eta && <span style={styles.time}>{eta}</span>}
+          <span style={styles.time}>{eta ? eta : 'N/A'}</span>
         </div>
       </div>
 
@@ -63,12 +63,9 @@ function RideCard({
       <div style={styles.row}>
         <div style={styles.driver}>
           <img src="/profilepic.svg" alt="Driver" style={styles.profilePic} />
-          <span style={styles.driverName}>{driverName}</span>
+          <span style={styles.driverName}>{driver_name}</span>
         </div>
-        <div style={styles.rating}>
-          {/* If you have an icon, you can do: <FaStar style={styles.starIcon} /> */}
-          {rating} ★
-        </div>
+        <div style={styles.rating}>{driver_rating} ★</div>
       </div>
     </div>
   );

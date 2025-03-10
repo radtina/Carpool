@@ -38,7 +38,7 @@ function SelectedRidePage() {
   const formattedRideTime = ride.ride_time
   ? `${new Date(ride.ride_time).toLocaleDateString()} ${new Date(ride.ride_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
   : '';
-  const formattedETA = ride.eta || ''; // Assuming ETA is a string; otherwise, format as needed
+  //const formattedETA = ride.eta; // Assuming ETA is a string; otherwise, format as needed
 
   return (
     <>
@@ -53,9 +53,9 @@ function SelectedRidePage() {
                 alt="Driver"
                 style={styles.profilePic}
               />
-              <span style={styles.driverName}>{ride.driver_name || 'Name'}</span>
+              <span style={styles.driverName}>{ride.driver_name}</span>
             </div>
-            <div style={styles.rating}>{ride.rating || '4.8'} ★</div>
+            <div style={styles.rating}>{ride.driver_rating} ★</div>
           </div>
 
           {/* Middle Section: Starting point and destination */}
@@ -63,8 +63,8 @@ function SelectedRidePage() {
             {/* Starting point */}
             <div style={styles.infoBlock}>
 
-              <span style={styles.address}>{ride.from_address || 'City A'}</span>
-              <span style={styles.time}>{formattedRideTime || '08:30'}</span>
+              <span style={styles.address}>{ride.from_address}</span>
+              <span style={styles.time}>{formattedRideTime}</span>
             </div>
 
             {/* Middle row: arrow or dash indicating going from -> to */}
@@ -76,8 +76,8 @@ function SelectedRidePage() {
 
             {/* Destination */}
             <div style={styles.infoBlock}>
-              <span style={styles.address}>{ride.to_address || 'City B'}</span>
-              <span style={styles.time}>{formattedETA || '10:30'}</span>
+              <span style={styles.address}>{ride.to_address}</span>
+              <span style={styles.time}>{ride.eta ? ride.eta : 'N/A'}</span>
             </div>
           </div>
 
@@ -85,10 +85,10 @@ function SelectedRidePage() {
           <div style={styles.bottomRow}>
             <div style={styles.carInfo}>
               <img src="/caricon.svg" alt="Car" style={styles.carIcon} />
-              <span style={styles.carType}>{ride.carType || 'Honda Civic'}</span>
+              <span style={styles.carType}>{ride.car_type}</span>
             </div>
             <div style={styles.priceContainer}>
-              <span style={styles.price}>{ride.price || 21} €</span>
+              <span style={styles.price}>{ride.price} €</span>
             </div>
           </div>
 
@@ -148,7 +148,6 @@ const styles = {
   },
   card: {
     width: '550px',
-    height: '450px',
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     backdropFilter: 'blur(8px)',
     borderRadius: '12px',
