@@ -36,6 +36,9 @@ func main() {
 
 	// Routes for User domain.
 	// Assuming userHandler is already initialized
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello from the backend!"))
+	})	
 	http.HandleFunc("/register", userHandler.RegisterHandler)
 	http.HandleFunc("/login", userHandler.LoginHandler)
 	http.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
