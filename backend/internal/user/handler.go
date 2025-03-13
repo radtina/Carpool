@@ -18,23 +18,35 @@ type Handler struct {
 }
 
 func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-	if err := h.Service.Register(&user); err != nil {
-		http.Error(w, "Error registering user", http.StatusInternalServerError)
-		return
-	}
-	user.Password = ""
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+    if r.Method != http.MethodPost {
+        http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    var user User
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        log.Println("Error decoding user JSON:", err)
+        http.Error(w, "Invalid input", http.StatusBadRequest)
+        return
+    }
+    log.Printf("Decoded user: %+v\n", user)
+
+    // Call the service
+    log.Println("Calling h.Service.Register")
+    if err := h.Service.Register(&user); err != nil {
+        log.Println("Error in Service.Register:", err)
+        http.Error(w, "Error registering user", http.StatusInternalServerError)
+        return
+    }
+    log.Println("Service.Register succeeded")
+
+    // Hide password in response
+    user.Password = ""
+
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(user)
 }
+
 
 func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
