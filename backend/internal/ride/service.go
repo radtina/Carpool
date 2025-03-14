@@ -36,8 +36,8 @@ func (s *Service) GetAllRides() ([]*Ride, error) {
 
 // SearchRidesFiltered applies geospatial proximity, time compatibility, and seat availability
 func (s *Service) SearchRidesFiltered(fromLon, fromLat, toLon, toLat float64, rideTime time.Time, numPeople int, maxDistance int) ([]*Ride, error) {
-    timeLowerBound := rideTime.Add(-0.5 * time.Hour)
-    timeUpperBound := rideTime.Add(0.5 * time.Hour)
+    timeLowerBound := rideTime.Add(-1 * time.Hour)
+    timeUpperBound := rideTime.Add(1 * time.Hour)
     maximumDistance := 1000*maxDistance
     return s.Repo.SearchRidesFiltered(fromLon, fromLat, toLon, toLat, timeLowerBound, timeUpperBound, numPeople, maximumDistance)
 }
