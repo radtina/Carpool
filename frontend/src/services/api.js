@@ -2,8 +2,10 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://carpoolbackend-hj1i.onrender.com',
+  baseURL: 'https://carpoolbackend-hj1i.onrender.com', // Adjust if your backend runs on a different URL or port
 });
+
+
 
 // Add an interceptor to attach the token to each request.
 api.interceptors.request.use(

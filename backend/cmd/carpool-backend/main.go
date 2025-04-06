@@ -79,9 +79,9 @@ func main() {
 	})
 
 	// Serve static files from the "uploads" directory at the "/uploads" path
-	//http.Handle("/uploads/",
-	//	http.StripPrefix("/uploads/",
-	//		http.FileServer(http.Dir("./uploads"))))
+	// http.Handle("/uploads/",
+	// 	http.StripPrefix("/uploads/",
+	// 		http.FileServer(http.Dir("./uploads"))))
 
 	// Routes for Booking domain.
 	http.HandleFunc("/bookings", func(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func main() {
 
 	// Set up CORS options.
 	c := cors.New(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:3000", "https://carpoolapp-q00v.onrender.com"},
+        AllowedOrigins:   []string{"https://carpoolapp-q00v.onrender.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
@@ -114,3 +114,6 @@ func main() {
 		log.Fatal(http.ListenAndServe(":8080", handler))
 	}
 }
+
+
+
