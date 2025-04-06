@@ -1,6 +1,6 @@
-// src/pages/PostRidePage.js
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import debounce from 'lodash.debounce';
 import Navbar from '../components/Navbar';
 import RoundedInput from '../components/RoundedInput';
 import RoundedButton from '../components/RoundedButton';
@@ -9,14 +9,6 @@ import Modal from '../components/Modal';
 import api from '../services/api';
 
 function PostRidePage() {
-
-  const now = new Date();
-  const defaultDate = now.toISOString().split('T')[0]; // "yyyy-mm-dd"
-  const defaultTime = new Date(now.getTime() + 60 * 60 * 1000) // add 1 hour
-  .toTimeString()
-  .split(' ')[0]
-  .slice(0, 5); // "HH:MM"
-
   // "To" address states
   const [toQuery, setToQuery] = useState('');
   const [toCoords, setToCoords] = useState({ lat: null, lon: null });
@@ -28,17 +20,18 @@ function PostRidePage() {
   const [fromSuggestions, setFromSuggestions] = useState([]);
 
   // Other ride details
-  const [date, setDate] = useState(defaultDate);
-  const [startTime, setStartTime] = useState(defaultTime);
-  const [price, setPrice] = useState('10');
-  const [seats, setSeats] = useState('2');
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [price, setPrice] = useState('');
+  const [seats, setSeats] = useState('');
   const [instantBooking, setInstantBooking] = useState(false);
-  const [carType, setCarType] = useState('Mercedes');
+  const [carType, setCarType] = useState('');
 
+  // Modal state
   const [showPostModal, setShowPostModal] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch address suggestions from Nominatim
+  // Function to fetch suggestions from Nominatim API
   const fetchSuggestions = async (query, setSuggestions) => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -52,9 +45,7 @@ function PostRidePage() {
           addressdetails: 1,
           limit: 5,
         },
-        headers: {
-          'Accept-Language': 'en',
-        },
+        headers: { 'Accept-Language': 'en' },
       });
       setSuggestions(response.data);
     } catch (error) {
@@ -63,18 +54,30 @@ function PostRidePage() {
     }
   };
 
+  // Debounced function to reduce API calls on every keystroke.
+  const debouncedFetchSuggestions = useCallback(
+    debounce((query, setter) => {
+      fetchSuggestions(query, setter);
+    }, 500),
+    []
+  );
+
   // Handlers for "To" field
   const handleToChange = (e) => {
     const q = e.target.value;
     setToQuery(q);
-    fetchSuggestions(q, setToSuggestions);
+    if (q.length >= 3) {
+      debouncedFetchSuggestions(q, setToSuggestions);
+    } else {
+      setToSuggestions([]);
+    }
   };
 
   const handleToSelect = (suggestion) => {
     setToQuery(suggestion.display_name);
-    setToCoords({ 
-      lat: parseFloat(suggestion.lat), 
-      lon: parseFloat(suggestion.lon) 
+    setToCoords({
+      lat: parseFloat(suggestion.lat),
+      lon: parseFloat(suggestion.lon),
     });
     setToSuggestions([]);
   };
@@ -83,50 +86,48 @@ function PostRidePage() {
   const handleFromChange = (e) => {
     const q = e.target.value;
     setFromQuery(q);
-    fetchSuggestions(q, setFromSuggestions);
+    if (q.length >= 3) {
+      debouncedFetchSuggestions(q, setFromSuggestions);
+    } else {
+      setFromSuggestions([]);
+    }
   };
 
   const handleFromSelect = (suggestion) => {
     setFromQuery(suggestion.display_name);
-    setFromCoords({ 
-      lat: parseFloat(suggestion.lat), 
-      lon: parseFloat(suggestion.lon) 
+    setFromCoords({
+      lat: parseFloat(suggestion.lat),
+      lon: parseFloat(suggestion.lon),
     });
     setFromSuggestions([]);
   };
 
-  // Handle form submission: build ride data with confirmed coordinates
+  // Handle form submission for posting a ride
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    // Ensure that both addresses have been selected (coordinates available)
     if (!fromCoords.lat || !toCoords.lat) {
       alert('Please select valid addresses for both From and To.');
       return;
     }
 
-    // Combine date and startTime into an ISO-formatted string
-    const rideTime = new Date(`${date}T${startTime}:00Z`).toISOString();
-
+    // Build the ride data object using snake_case keys to match the backend.
     const rideData = {
-      from_lat: fromCoords.lat,
       from_lon: fromCoords.lon,
-      to_lat: toCoords.lat,
+      from_lat: fromCoords.lat,
       to_lon: toCoords.lon,
-      from_address: fromQuery,   // store the text input
-      to_address: toQuery,       // store the text input
-      instant_booking: instantBooking,
+      to_lat: toCoords.lat,
+      from_address: fromQuery,
+      to_address: toQuery,
       price: Number(price),
-      ride_time: rideTime,
+      ride_time: new Date(date + 'T' + startTime + ':00Z'),
       available_seats: Number(seats),
       car_type: carType,
+      instant_booking: instantBooking,
     };
 
-    const token = localStorage.getItem('token');
-
     try {
-      const response = await api.post('/rides', rideData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post('/rides', rideData);
       console.log('Ride posted successfully:', response.data);
       setShowPostModal(true);
     } catch (error) {
@@ -136,7 +137,7 @@ function PostRidePage() {
   };
 
   const handleConfirmPost = () => {
-    alert("Ride posted!");
+    alert('Ride posted!');
     setShowPostModal(false);
     navigate('/find-ride');
   };
@@ -151,8 +152,8 @@ function PostRidePage() {
       <div style={styles.container}>
         <h2>Post a Ride</h2>
         <form onSubmit={handleSubmit} style={styles.form}>
-          {/* 1st Row: "To" & "Price" */}
-          <div style={styles.fieldContainer}>
+          {/* "To" Field */}
+          <div style={styles.inputWrapper}>
             <RoundedInput
               placeholder="To"
               value={toQuery}
@@ -173,17 +174,18 @@ function PostRidePage() {
               </ul>
             )}
           </div>
+
+          {/* Price Field */}
           <RoundedInput
             placeholder="Price"
-            min="0"
             type="number"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
           />
 
-          {/* 2nd Row: "From" & "Number of Seats" */}
-          <div style={styles.fieldContainer}>
+          {/* "From" Field */}
+          <div style={styles.inputWrapper}>
             <RoundedInput
               placeholder="From"
               value={fromQuery}
@@ -204,16 +206,15 @@ function PostRidePage() {
               </ul>
             )}
           </div>
+
           <RoundedInput
             placeholder="Number of Seats"
-            min='1'
             type="number"
             value={seats}
             onChange={(e) => setSeats(e.target.value)}
             required
           />
 
-          {/* 3rd Row: "Date" & "Instant Booking" */}
           <RoundedInput
             placeholder="Date"
             type="date"
@@ -221,13 +222,13 @@ function PostRidePage() {
             onChange={(e) => setDate(e.target.value)}
             required
           />
+
           <ToggleSwitch
             label="Instant Booking"
             checked={instantBooking}
             onChange={setInstantBooking}
           />
 
-          {/* 4th Row: "Start Time" & "Car Name & Model" */}
           <RoundedInput
             type="time"
             placeholder="Start Time"
@@ -235,18 +236,19 @@ function PostRidePage() {
             onChange={(e) => setStartTime(e.target.value)}
             required
           />
+
           <RoundedInput
             placeholder="Car Name & Model"
             value={carType}
             onChange={(e) => setCarType(e.target.value)}
           />
 
-          {/* Post button across both columns */}
           <RoundedButton type="submit" style={styles.button}>
             Post
           </RoundedButton>
         </form>
       </div>
+
       <Modal visible={showPostModal} onClose={handleCancelPost}>
         <h3>Confirm Ride Details</h3>
         <p>Are you sure you want to post this ride?</p>
@@ -273,12 +275,17 @@ const styles = {
   },
   form: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr', // 2 columns
+    gridTemplateColumns: '1fr 1fr',
     gap: '15px',
     marginTop: '20px',
   },
-  fieldContainer: {
-    position: 'relative', // For the dropdown to position absolutely
+  button: {
+    gridColumn: '1 / span 2',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  inputWrapper: {
+    position: 'relative',
   },
   suggestionList: {
     position: 'absolute',
@@ -293,17 +300,10 @@ const styles = {
     zIndex: 1000,
     maxHeight: '200px',
     overflowY: 'auto',
-    textAlign: 'left',
   },
   suggestionItem: {
     padding: '8px',
     cursor: 'pointer',
-  },
-  button: {
-    gridColumn: '1 / span 2', // Span both columns
-    width: '100%',
-    boxSizing: 'border-box',
-    marginTop: '10px',
   },
   modalButtonContainer: {
     display: 'flex',

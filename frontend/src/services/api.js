@@ -2,7 +2,19 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://carpoolbackend-hj1i.onrender.com', // Adjust if your backend runs on a different URL or port
+  baseURL: process.env.REACT_APP_API_URL || 'https://carpoolbackend-hj1i.onrender.com',
 });
+
+// Add an interceptor to attach the token to each request.
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;

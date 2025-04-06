@@ -42,13 +42,19 @@ func LoadConfig() *Config {
 }
 
 func ConnectDB(cfg *Config) *sql.DB {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=require", cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost)
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = db.Ping(); err != nil {
-		log.Fatal("Cannot connect to database:", err)
-	}
-	return db
+    // Get ssl mode from environment variable. Default to disable if not set.
+    sslMode := os.Getenv("DB_SSLMODE")
+    if sslMode == "" {
+        sslMode = "disable"
+    }
+    connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=%s",
+        cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost, sslMode)
+    db, err := sql.Open("postgres", connStr)
+    if err != nil {
+        log.Fatal(err)
+    }
+    if err = db.Ping(); err != nil {
+        log.Fatal("Cannot connect to database:", err)
+    }
+    return db
 }

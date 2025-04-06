@@ -15,10 +15,10 @@ function RideCard({
 }) {
   const [hovered, setHovered] = useState(false);
 
-  // Format the ride time more nicely if needed
   const formattedTime = ride_time
-    ? `${new Date(ride_time).toLocaleDateString()} ${new Date(ride_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : '';
+  ? `${new Date(ride_time).toLocaleDateString('en-US', { timeZone: 'UTC' })} ${new Date(ride_time).toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' })}`
+  : '';
+
 
   return (
     <div

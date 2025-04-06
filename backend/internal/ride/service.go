@@ -29,6 +29,9 @@ func (s *Service) CreateRide(ride *Ride) error {
     return s.Repo.CreateRide(ride)
 }
 
+
+
+
 // GetAllRides fetches all rides without filters
 func (s *Service) GetAllRides() ([]*Ride, error) {
     return s.Repo.GetAllRides()

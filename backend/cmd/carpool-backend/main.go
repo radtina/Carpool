@@ -96,7 +96,7 @@ func main() {
 
 	// Set up CORS options.
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://carpoolapp-q00v.onrender.com"},
+        AllowedOrigins:   []string{"http://localhost:3000", "https://yourfrontenddomain.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,

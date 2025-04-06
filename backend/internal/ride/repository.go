@@ -24,10 +24,11 @@ func (r *Repository) CreateRide(ride *Ride) error {
             ride_time,
             available_seats, 
             car_type,
+            instant_booking,
             eta,
             created_at
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()
         )
         RETURNING ride_id, created_at
     `
@@ -44,6 +45,7 @@ func (r *Repository) CreateRide(ride *Ride) error {
         ride.RideTime,
         ride.AvailableSeats,
         ride.CarType,
+        ride.InstantBooking,  // New field
         ride.ETA,
     ).Scan(&ride.RideID, &ride.CreatedAt)
 }

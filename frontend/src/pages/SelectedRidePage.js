@@ -34,11 +34,11 @@ function SelectedRidePage() {
     setShowBookingModal(false);
   };
 
-  // Format ride time (for starting time) and ETA (arrival time)
-  const formattedRideTime = ride.ride_time
-  ? `${new Date(ride.ride_time).toLocaleDateString()} ${new Date(ride.ride_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+// Format ride time (for starting time) as stored in the database (UTC)
+const formattedRideTime = ride.ride_time
+  ? `${new Date(ride.ride_time).toLocaleDateString('en-US', { timeZone: 'UTC' })} ${new Date(ride.ride_time).toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' })}`
   : '';
-  //const formattedETA = ride.eta; // Assuming ETA is a string; otherwise, format as needed
+
 
   return (
     <>
@@ -60,9 +60,9 @@ function SelectedRidePage() {
 
           {/* Middle Section: Starting point and destination */}
           <div style={styles.infoSection}>
+
             {/* Starting point */}
             <div style={styles.infoBlock}>
-
               <span style={styles.address}>{ride.from_address}</span>
               <span style={styles.time}>{formattedRideTime}</span>
             </div>

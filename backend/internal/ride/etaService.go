@@ -36,6 +36,7 @@ func GetDuration(fromLon, fromLat, toLon, toLat float64) (int, error) {
         return 0, err
     }
 
+
     var orsResp ORSResponse
     if err := json.Unmarshal(resp.Body(), &orsResp); err != nil {
         return 0, err
