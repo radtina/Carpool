@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import debounce from 'lodash.debounce';
 import Navbar from '../components/Navbar';
 import RoundedInput from '../components/RoundedInput';
 import RoundedButton from '../components/RoundedButton';
 import api from '../services/api';
 
 function FindRidePage() {
-
   const now = new Date();
   const defaultDate = now.toISOString().split('T')[0]; // "yyyy-mm-dd"
   const defaultTime = new Date(now.getTime() + 60 * 60 * 1000) // add 1 hour
@@ -17,15 +17,15 @@ function FindRidePage() {
   const [toQuery, setToQuery] = useState('');
   const [toCoords, setToCoords] = useState({ lat: null, lon: null });
   const [toSuggestions, setToSuggestions] = useState([]);
+
   const [fromQuery, setFromQuery] = useState('');
   const [fromCoords, setFromCoords] = useState({ lat: null, lon: null });
   const [fromSuggestions, setFromSuggestions] = useState([]);
+
   const [date, setDate] = useState(defaultDate);
   const [time, setTime] = useState(defaultTime); 
   const [numPeople, setNumPeople] = useState('1');
   const [maxDistance, setMaxDistance] = useState('5'); // default 5 km
-
-
 
   const navigate = useNavigate();
 
@@ -54,11 +54,23 @@ function FindRidePage() {
     }
   };
 
+  // Debounced version of the suggestion fetch to limit API calls
+  const debouncedFetchSuggestions = useCallback(
+    debounce((query, setter) => {
+      fetchSuggestions(query, setter);
+    }, 500),
+    []
+  );
+
   // Handlers for "To" field
   const handleToChange = (e) => {
     const q = e.target.value;
-    setToQuery(q);
-    fetchSuggestions(q, setToSuggestions);
+    setToQuery(q);    
+    if (q.length >= 3) {
+      debouncedFetchSuggestions(q, setToSuggestions);
+    } else {
+      setToSuggestions([]);
+    }
   };
 
   const handleToSelect = (suggestion) => {
@@ -74,12 +86,19 @@ function FindRidePage() {
   const handleFromChange = (e) => {
     const q = e.target.value;
     setFromQuery(q);
-    fetchSuggestions(q, setFromSuggestions);
+    if (q.length >= 3) {
+      debouncedFetchSuggestions(q, setFromSuggestions);
+    } else {
+      setFromSuggestions([]);
+    }
   };
 
   const handleFromSelect = (suggestion) => {
     setFromQuery(suggestion.display_name);
-    setFromCoords({ lat: suggestion.lat, lon: suggestion.lon });
+    setFromCoords({
+      lat: parseFloat(suggestion.lat),
+      lon: parseFloat(suggestion.lon),
+    });
     setFromSuggestions([]);
   };
 
