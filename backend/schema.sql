@@ -1,6 +1,3 @@
--- Enable the PostGIS extension (if not already enabled)
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 -- Create Users table
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
