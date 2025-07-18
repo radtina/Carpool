@@ -14,7 +14,7 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	db := config.ConnectDB(cfg)
+	db := config.ConnectDB()
 
 	// Initialize User domain.
 	userRepo := &user.Repository{DB: db}
